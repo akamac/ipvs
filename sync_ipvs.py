@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from gnlpy.ipvs import IpvsClient, Pool
 import json
 import signal
@@ -7,6 +9,7 @@ def reload_ipvs(signalNumber, frame):
     with open('/ipvs.json') as f:
         pools = json.loads(f.read())
 
+    print('Loading pools from json')
     pools_to_load = Pool.load_pools_from_json_list(pools)
     current_pools = client.get_pools()
 
@@ -44,8 +47,16 @@ def reload_ipvs(signalNumber, frame):
                                 dest.ip())
 
 
+def flush_n_exit(signalNumber, frame):
+    client.flush()
+    raise SystemExit
+
+
 client = IpvsClient()
-signal.signal(signal.SIGUSR1, reload_ipvs)
+reload_ipvs(None, None)
+signal.signal(signal.SIGHUP, reload_ipvs)
+signal.signal(signal.SIGINT, flush_n_exit) # Nomad
+signal.signal(signal.SIGTERM, flush_n_exit) # Docker
 while True:
-    print('Waiting for SIGUSR1 to reload ipvs config')
-    signal.sigwait([signal.SIGUSR1])
+    print('Waiting for SIGHUP to reload ipvs config')
+    signal.pause()
