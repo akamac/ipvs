@@ -3,3 +3,12 @@ Send `SIGHUP` to reload IPVS config from `/ipvs.json` formatted for [facebook/gn
 
 - load `ip_vs` module on the host first with `modprobe ip_vs`
 - run with `--cap-add NET_ADMIN`.
+
+### Run unit tests
+
+```bash
+docker build -t intermedia/ipvs . && docker build -t ipvs:pytest tests
+docker run --cap-add=NET_ADMIN --network=host ipvs:pytest
+# remote interactive debug with pyvdev 
+docker run --rm --cap-add=NET_ADMIN --network=host -e PYDEV_IP=10.9.3.185 -e PYDEV_PORT=4444 ipvs:pytest
+```

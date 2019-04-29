@@ -1,0 +1,84 @@
+[
+  [],
+  [
+    {
+      "service": {
+        "af": 2,
+        "port": 443,
+        "proto": "tcp",
+        "sched": "lc",
+        "vip": "10.254.196.200"
+      },
+      "dests": []
+    }
+  ],
+  [
+    {
+      "service": {
+        "af": 2,
+        "port": 443,
+        "proto": "tcp",
+        "sched": "lc",
+        "vip": "10.254.196.200"
+      },
+      "dests": [
+        {
+          "ip": "10.254.196.208",
+          "weight": 1,
+          "fwd_method": 3
+        }
+      ]
+    }
+  ],
+  [
+    {
+      "service": {
+        "af": 2,
+        "port": 443,
+        "proto": "tcp",
+        "sched": "lc",
+        "vip": "10.254.196.200"
+      },
+      "dests": [
+        {
+          "ip": "10.254.196.207",
+          "weight": 1,
+          "fwd_method": 3
+        },
+        {
+          "ip": "10.254.196.208",
+          "weight": 1,
+          "fwd_method": 3
+        }
+      ]
+    }
+  ],
+  [
+    {
+      "service": {
+        "af": 2,
+        "port": 443,
+        "proto": "tcp",
+        "sched": "lc",
+        "vip": "10.254.196.200"
+      },
+      "dests": []
+    },
+    {
+      "service": {
+        "af": 2,
+        "port": 80,
+        "proto": "udp",
+        "sched": "wlc",
+        "vip": "10.254.196.201"
+      },
+      "dests": []
+    }
+  ],
+  [
+    {
+      "service": {},
+      "dests": []
+    }
+  ]
+]
