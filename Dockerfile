@@ -4,8 +4,8 @@ LABEL maintainer="Alexey Miasoedov <alexey.miasoedov@gmail.com>"
 ENV PYTHONUNBUFFERED=1
 # ipvsadm for troubleshooting
 RUN apk add --no-cache ipvsadm
-ADD ipvssync.py /usr/local/lib/python3.7/site-packages/
 RUN pip install https://github.com/akamac/gnlpy/archive/develop.zip
-ADD ipvs.json /
+ADD ipvssync.py /usr/local/lib/python3.7/site-packages/
+ADD ipvs.json /config/
 
 CMD ["python", "-m", "ipvssync"]

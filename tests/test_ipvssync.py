@@ -22,7 +22,7 @@ def flush_ipvs_config(ipvs_client):
 
 
 @pytest.fixture(scope='module')
-def valid_pools():
+def load_pools():
     with open('/tests/pools.json') as f:
         return json.load(f)
 
@@ -38,10 +38,10 @@ def valid_pools():
                           pytest.param([2, 3], id='add_second_dest'),
                           pytest.param([5], id='invalid_config', marks=pytest.mark.xfail)
                           ])
-def test_reload_ipvs(ipvs_client, valid_pools, indices):
+def test_reload_ipvs(ipvs_client, load_pools, indices):
     if environ.get('PYDEV_IP'):
         pydevd_pycharm.settrace(environ.get('PYDEV_IP'), port=int(environ.get('PYDEV_PORT')), stdoutToServer=True, stderrToServer=True)
-    for pools in itemgetter(*indices)(valid_pools):
+    for pools in itemgetter(*indices)(load_pools):
         reload_ipvs(ipvs_client, pools)
         def remove_fwd_method(pool):
             for d in pool['dests']:

@@ -7,7 +7,7 @@ import signal
 
 def load_pools():
     print('Loading pools from config')
-    with open('/ipvs.json') as f:
+    with open('/config/ipvs.json') as f:
         return json.loads(f.read())
 
 
