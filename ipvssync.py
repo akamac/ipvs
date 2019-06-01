@@ -1,32 +1,38 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.7
+"""
+Reloads IPVS configuration from /config/ipvs.json upon receiving SIGHUP signal.
+For json format see facebook/gnlpy on GitHub.
+"""
 
-from gnlpy.ipvs import IpvsClient, Pool
 import json
 import signal
+from gnlpy.ipvs import IpvsClient, Pool
 
 
-def load_pools():
+def load_pools(): # pragma: no cover
+    """Load pool configuration from json file"""
     print('Loading pools from config')
-    with open('/config/ipvs.json') as f:
-        return json.loads(f.read())
+    with open('/config/ipvs.json') as file:
+        return json.loads(file.read())
 
 
-def reload_ipvs(client, pools):
+def reload_ipvs(client: IpvsClient, pools: list) -> None:
+    """Reload IPVS configuration given the passed list of pools"""
     print('Updating IPVS configuration')
     try:
         pools_to_load = Pool.load_pools_from_json_list(pools)
-    except:
+    except: # pylint: disable=bare-except
         print('Invalid pool configuration')
         return
 
     existing_pools = client.get_pools()
 
-    services_to_load = [p.service_ for p in pools_to_load]
-    existing_services = [p.service_ for p in existing_pools]
+    services_to_load = [p.service() for p in pools_to_load]
+    existing_services = [p.service() for p in existing_pools]
 
     for service in services_to_load:
         if service not in existing_services:
-            print('Adding VIP {}:{}'.format(service.vip(), service.port()))
+            print(f"Adding VIP {service.vip()}:{service.port()}")
             client.add_service(service.vip(),
                                service.port(),
                                protocol=service.proto_num(),
@@ -40,30 +46,31 @@ def reload_ipvs(client, pools):
 
     existing_pools = client.get_pools()
     for pool in pools_to_load:
-        existing_pool = next(filter(lambda p: p.service_ == pool.service_, existing_pools))
-        for dest in pool.dests_:
-            if dest.ip() not in [d.ip() for d in existing_pool.dests_]:
-                client.add_dest(pool.service_.vip(),
-                                pool.service_.port(),
-                                protocol=pool.service_.proto_num(),
+        existing_pool = next(filter(lambda p: p.service() == pool.service(), existing_pools))
+        for dest in pool.dests():
+            if dest.ip() not in [d.ip() for d in existing_pool.dests()]:
+                client.add_dest(pool.service().vip(),
+                                pool.service().port(),
+                                protocol=pool.service().proto_num(),
                                 rip=dest.ip(),
                                 weight=dest.weight(),
                                 method=dest.fwd_method())
-        for dest in existing_pool.dests_:
-            if dest.ip() not in [d.ip() for d in pool.dests_]:
-                client.del_dest(pool.service_.vip(),
-                                pool.service_.port(),
-                                protocol=pool.service_.proto_num(),
+        for dest in existing_pool.dests():
+            if dest.ip() not in [d.ip() for d in pool.dests()]:
+                client.del_dest(pool.service().vip(),
+                                pool.service().port(),
+                                protocol=pool.service().proto_num(),
                                 rip=dest.ip())
 
 
-def flush_n_exit(client):
+def flush_n_exit(client: IpvsClient) -> None:
+    """Flush IPVS config and exit"""
     print('Received termination request. Flushing config')
     client.flush()
     raise SystemExit
 
 
-def main():
+def main(): # pylint: disable=missing-docstring
     client = IpvsClient()
     reload_ipvs(client, load_pools())
 

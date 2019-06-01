@@ -1,14 +1,26 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.7
 
+from functools import wraps
+import json
+from operator import itemgetter
+from os import environ
 from gnlpy.ipvs import IpvsClient
 from ipvssync import reload_ipvs
 import pytest
-from operator import itemgetter
-import json
-from os import environ
 
-if environ.get('PYDEV_IP'):
-    import pydevd_pycharm
+
+def debug(func):
+    """Decorator for interactive debug using pydevd (PyCharm)"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if environ.get('PYDEV_IP'):
+            import pydevd_pycharm
+            pydevd_pycharm.settrace(environ.get('PYDEV_IP'),
+                                    port=int(environ.get('PYDEV_PORT')),
+                                    stdoutToServer=True,
+                                    stderrToServer=True)
+        return func(*args, **kwargs)
+    return wrapper
 
 
 @pytest.fixture(scope='module')
@@ -23,10 +35,11 @@ def flush_ipvs_config(ipvs_client):
 
 @pytest.fixture(scope='module')
 def load_pools():
-    with open('/tests/pools.json') as f:
-        return json.load(f)
+    with open('pools.json') as file:
+        return json.load(file)
 
 
+@debug
 @pytest.mark.parametrize('indices',
                          [pytest.param([0, 1], id='add_service'),
                           pytest.param([1, 2], id='add_dest'),
@@ -39,8 +52,6 @@ def load_pools():
                           pytest.param([5], id='invalid_config', marks=pytest.mark.xfail)
                           ])
 def test_reload_ipvs(ipvs_client, load_pools, indices):
-    if environ.get('PYDEV_IP'):
-        pydevd_pycharm.settrace(environ.get('PYDEV_IP'), port=int(environ.get('PYDEV_PORT')), stdoutToServer=True, stderrToServer=True)
     for pools in itemgetter(*indices)(load_pools):
         reload_ipvs(ipvs_client, pools)
         def remove_fwd_method(pool):

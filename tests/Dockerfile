@@ -1,7 +1,13 @@
 FROM intermedia/ipvs
 
-#RUN apk add --no-cache ipvsadm
-RUN pip install pytest ipython pydevd-pycharm
-ADD . /tests
+# gcc required for pylint, namely typed-ast
+RUN apk add --no-cache gcc musl-dev
+RUN pip install pytest \
+                pytest-cov \
+                pylint \
+                ipython \
+                pydevd-pycharm
+ADD . tests/
+WORKDIR tests
 
-CMD ["pytest", "/tests/", "-W", "ignore::DeprecationWarning"]
+CMD ["pytest", "--cov", "ipvssync", "-W", "ignore::DeprecationWarning", "-v"]
